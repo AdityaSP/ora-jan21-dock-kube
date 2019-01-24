@@ -1,0 +1,50 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: ghost-dep
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        # becomes the label for the POD
+        app: blog-ghost
+    spec:
+      containers:
+      - name: ghost
+        image: ghost:1-alpine
+        ports:
+        # can use this name in service as targetPort
+        - name: ghost-port
+          containerPort: 2368
+        env:
+        - name: database__client
+          value: mysql
+        - name: database__connection__user
+          value: root
+        - name: database__connection__password
+          value: welcome
+        - name: database__connection__host
+          # need to connect to the svc for svc discovery 
+          value: db-svc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ghost-svc
+spec:
+  ports:
+  # Port of the service - to be used internally in the cluster
+  - port: 8888
+    # Port on the node (VM/Machine to access from outside of the VM)
+    nodePort: 32001
+    # Port of the endpoint container
+    targetPort: ghost-port
+    protocol: TCP
+  selector:
+    # label of the POD
+    app: blog-ghost
+  type: NodePort
+
+
+

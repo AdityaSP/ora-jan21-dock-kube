@@ -1,0 +1,41 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: db-dep
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        # becomes the label for the POD
+        app: blog-db
+    spec:
+      containers:
+      - name: db
+        image: mysql:5.7
+        ports:
+        # can use this name in service as targetPort
+        - name: db-port
+          containerPort: 3306
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: welcome
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: db-svc
+spec:
+  ports:
+  # Port of the service - to be used internally in the cluster
+  - port: 3306
+    # Port of the endpoint container
+    targetPort: db-port
+    protocol: TCP
+  selector:
+    # label of the POD
+    app: blog-db
+  type: ClusterIP
+
+
+
